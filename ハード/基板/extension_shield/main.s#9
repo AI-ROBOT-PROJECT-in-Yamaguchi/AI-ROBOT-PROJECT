@@ -919,8 +919,8 @@
 </classes>
 <parts>
 <part name="JP" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-2X20" device="" package3d_urn="urn:adsk.eagle:package:22443/2"/>
-<part name="JP1" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X3" device="" package3d_urn="urn:adsk.eagle:package:22458/2"/>
-<part name="JP2" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X3" device="" package3d_urn="urn:adsk.eagle:package:22458/2"/>
+<part name="SERVO2" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X3" device="" package3d_urn="urn:adsk.eagle:package:22458/2"/>
+<part name="SERVO1" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X3" device="" package3d_urn="urn:adsk.eagle:package:22458/2"/>
 <part name="MOTOR4" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X2" device="" package3d_urn="urn:adsk.eagle:package:22435/2"/>
 <part name="MOTOR3" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X2" device="" package3d_urn="urn:adsk.eagle:package:22435/2"/>
 <part name="MOTOR2" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X2" device="" package3d_urn="urn:adsk.eagle:package:22435/2"/>
@@ -934,11 +934,11 @@
 <instance part="JP" gate="A" x="27.94" y="154.94" smashed="yes">
 <attribute name="VALUE" x="21.59" y="124.46" size="1.778" layer="96"/>
 </instance>
-<instance part="JP1" gate="A" x="7.62" y="182.88" smashed="yes" rot="R180">
+<instance part="SERVO2" gate="A" x="7.62" y="182.88" smashed="yes" rot="R180">
 <attribute name="NAME" x="13.97" y="177.165" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="13.97" y="190.5" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="JP2" gate="A" x="7.62" y="167.64" smashed="yes" rot="R180">
+<instance part="SERVO1" gate="A" x="7.62" y="167.64" smashed="yes" rot="R180">
 <attribute name="NAME" x="13.97" y="161.925" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="13.97" y="175.26" size="1.778" layer="96" rot="R180"/>
 </instance>
@@ -1026,6 +1026,55 @@
 <pinref part="MOTOR4" gate="G$1" pin="2"/>
 <pinref part="JP" gate="A" pin="19"/>
 <wire x1="10.16" y1="154.94" x2="25.4" y2="154.94" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$2" class="0">
+<segment>
+<pinref part="JP" gate="A" pin="2"/>
+<pinref part="SERVO2" gate="A" pin="2"/>
+<wire x1="33.02" y1="177.8" x2="33.02" y2="182.88" width="0.1524" layer="91"/>
+<wire x1="33.02" y1="182.88" x2="15.24" y2="182.88" width="0.1524" layer="91"/>
+<pinref part="SERVO1" gate="A" pin="2"/>
+<wire x1="15.24" y1="182.88" x2="10.16" y2="182.88" width="0.1524" layer="91"/>
+<wire x1="10.16" y1="167.64" x2="15.24" y2="167.64" width="0.1524" layer="91"/>
+<wire x1="15.24" y1="167.64" x2="15.24" y2="182.88" width="0.1524" layer="91"/>
+<junction x="15.24" y="182.88"/>
+</segment>
+</net>
+<net name="N$12" class="0">
+<segment>
+<pinref part="SERVO2" gate="A" pin="3"/>
+<wire x1="10.16" y1="185.42" x2="20.32" y2="185.42" width="0.1524" layer="91"/>
+<wire x1="20.32" y1="185.42" x2="20.32" y2="170.18" width="0.1524" layer="91"/>
+<pinref part="JP" gate="A" pin="7"/>
+<wire x1="20.32" y1="170.18" x2="25.4" y2="170.18" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$13" class="0">
+<segment>
+<pinref part="SERVO1" gate="A" pin="3"/>
+<wire x1="10.16" y1="170.18" x2="12.7" y2="170.18" width="0.1524" layer="91"/>
+<wire x1="12.7" y1="170.18" x2="12.7" y2="162.56" width="0.1524" layer="91"/>
+<pinref part="JP" gate="A" pin="13"/>
+<wire x1="12.7" y1="162.56" x2="25.4" y2="162.56" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="GND" class="0">
+<segment>
+<pinref part="SERVO1" gate="A" pin="1"/>
+<wire x1="10.16" y1="165.1" x2="20.32" y2="165.1" width="0.1524" layer="91"/>
+<pinref part="JP" gate="A" pin="25"/>
+<wire x1="20.32" y1="165.1" x2="20.32" y2="147.32" width="0.1524" layer="91"/>
+<wire x1="20.32" y1="147.32" x2="25.4" y2="147.32" width="0.1524" layer="91"/>
+<label x="15.24" y="157.48" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="JP" gate="A" pin="9"/>
+<wire x1="25.4" y1="167.64" x2="17.78" y2="167.64" width="0.1524" layer="91"/>
+<pinref part="SERVO2" gate="A" pin="1"/>
+<wire x1="10.16" y1="180.34" x2="17.78" y2="180.34" width="0.1524" layer="91"/>
+<wire x1="17.78" y1="180.34" x2="17.78" y2="167.64" width="0.1524" layer="91"/>
+<label x="0" y="180.34" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>

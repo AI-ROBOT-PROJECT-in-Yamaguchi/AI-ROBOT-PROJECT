@@ -72,7 +72,7 @@
 <layer number="98" name="Guide" color="6" fill="1" visible="no" active="no"/>
 </layers>
 <board>
-<fusionsync huburn="a.cGVyc29uYWw6dWUyODk4OGJl" projecturn="a.cGVyc29uYWw6dWUyODk4OGJlIzIwMTkwNjI2MjAwNzYzMDU2" f3durn="urn:adsk.wipprod:dm.lineage:CDxB4zg6QB6FsaTxH3H8kA" pcbguid="4335cb08-71ef-426d-9e22-be68014e90e0" lastpulledtime="" lastsyncedchangeguid="32322f6e-95fc-721a-9403-8dd389b5975e"/>
+<fusionsync huburn="a.cGVyc29uYWw6dWUyODk4OGJl" projecturn="a.cGVyc29uYWw6dWUyODk4OGJlIzIwMTkwNjI2MjAwNzYzMDU2" f3durn="urn:adsk.wipprod:dm.lineage:CDxB4zg6QB6FsaTxH3H8kA" pcbguid="4335cb08-71ef-426d-9e22-be68014e90e0" lastpulledtime="" lastsyncedchangeguid="fa3c89c5-6253-a979-a98f-bd6014f56397"/>
 <plain>
 <wire x1="18" y1="79.365" x2="18" y2="0.635" width="0.1524" layer="20"/>
 <wire x1="18" y1="0.635" x2="17.365" y2="0" width="0.1524" layer="20" curve="-90"/>
@@ -605,12 +605,12 @@ design rules under a new name.</description>
 <attribute name="VALUE" x="5.555" y="58" size="1.27" layer="27" rot="R270"/>
 </element>
 <element name="SERVO2" library="pinhead" library_urn="urn:adsk.eagle:library:325" package="1X03" package3d_urn="urn:adsk.eagle:package:22458/2" value="" x="1" y="68" smashed="yes" rot="R90">
-<attribute name="NAME" x="-3.3688" y="62.8438" size="1.27" layer="25" ratio="10" rot="R90"/>
+<attribute name="NAME" x="-3.3688" y="64.5" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="POPULARITY" value="92" x="1" y="68" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="VALUE" x="4.175" y="64.19" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="SERVO1" library="pinhead" library_urn="urn:adsk.eagle:library:325" package="1X03" package3d_urn="urn:adsk.eagle:package:22458/2" value="" x="1" y="57" smashed="yes" rot="R90">
-<attribute name="NAME" x="-3.3688" y="51.8438" size="1.27" layer="25" ratio="10" rot="R90"/>
+<attribute name="NAME" x="-3.3688" y="53.5" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="POPULARITY" value="92" x="1" y="57" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="VALUE" x="4.175" y="53.19" size="1.27" layer="27" rot="R90"/>
 </element>
@@ -635,7 +635,7 @@ design rules under a new name.</description>
 <attribute name="VALUE" x="4.175" y="2.46" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="LED_TAPE" library="pinhead" library_urn="urn:adsk.eagle:library:325" package="1X03" package3d_urn="urn:adsk.eagle:package:22458/2" value="" x="1" y="46" smashed="yes" rot="R90">
-<attribute name="NAME" x="-3.3688" y="40.8438" size="1.27" layer="25" ratio="10" rot="R90"/>
+<attribute name="NAME" x="-3.3688" y="41.4" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="POPULARITY" value="92" x="1" y="46" size="1.778" layer="27" rot="R90" display="off"/>
 <attribute name="VALUE" x="4.175" y="42.19" size="1.27" layer="27" rot="R90"/>
 </element>

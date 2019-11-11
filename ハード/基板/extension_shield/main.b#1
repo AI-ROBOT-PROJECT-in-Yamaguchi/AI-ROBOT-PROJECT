@@ -3,7 +3,7 @@
 <eagle version="9.5.1">
 <drawing>
 <settings>
-<setting alwaysvectorfont="yes"/>
+<setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="50" unitdist="mil" unit="mm" style="lines" multiple="1" display="no" altdistance="5" altunitdist="mil" altunit="mm"/>
@@ -72,7 +72,7 @@
 <layer number="98" name="Guide" color="6" fill="1" visible="no" active="no"/>
 </layers>
 <board>
-<fusionsync huburn="a.cGVyc29uYWw6dWUyODk4OGJl" projecturn="a.cGVyc29uYWw6dWUyODk4OGJlIzIwMTkwNjI2MjAwNzYzMDU2" f3durn="urn:adsk.wipprod:dm.lineage:CDxB4zg6QB6FsaTxH3H8kA" pcbguid="4335cb08-71ef-426d-9e22-be68014e90e0" lastpulledtime="" lastsyncedchangeguid="32322f6e-95fc-721a-9403-8dd389b5975e"/>
+<fusionsync huburn="a.cGVyc29uYWw6dWUyODk4OGJl" projecturn="a.cGVyc29uYWw6dWUyODk4OGJlIzIwMTkwNjI2MjAwNzYzMDU2" f3durn="urn:adsk.wipprod:dm.lineage:CDxB4zg6QB6FsaTxH3H8kA" pcbguid="4335cb08-71ef-426d-9e22-be68014e90e0" lastpulledtime="" lastsyncedchangeguid="fa3c89c5-6253-a979-a98f-bd6014f56397"/>
 <plain>
 <wire x1="18" y1="79.365" x2="18" y2="0.635" width="0.1524" layer="20"/>
 <wire x1="18" y1="0.635" x2="17.365" y2="0" width="0.1524" layer="20" curve="-90"/>
@@ -96,6 +96,7 @@
 <text x="-5.08" y="76.2" size="1.778" layer="25">Designed by NSD</text>
 <text x="5.08" y="67.31" size="1.2" layer="25">Extension
   Shield Board</text>
+<text x="10.16" y="64.77" size="1" layer="25">ver 1.0</text>
 </plain>
 <libraries>
 <library name="pinhead" urn="urn:adsk.eagle:library:325">
