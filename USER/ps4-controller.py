@@ -1,5 +1,6 @@
 import os
 import pygame
+import math
 
 class PS4Controller(object):
     controller = None
@@ -38,9 +39,17 @@ class PS4Controller(object):
                 elif event.type == pygame.JOYHATMOTION:
                     self.hat_data[event.hat] = event.value
 
-                print(self.button_data)
-                print(self.axis_data)
-                print(self.hat_data)
+            #    print(self.button_data)
+             #   print(self.axis_data)
+              #  print(self.hat_data)
+            if len(self.axis_data) == 4:
+                self.controller_angle()
+
+    def controller_angle(self):
+        print(self.axis_data[0])
+        #x_rad = math.acos(self.axis_data[0])
+        #y_rad = math.asin(self.axis_data[1])
+
 
 
 if __name__ == "__main__":
