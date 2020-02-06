@@ -15,6 +15,8 @@ class PS4Controller(object):
         self.controller.init()
 
     def listen(self):
+        right_angle = 0.0
+        left_angle = 0.0
         if not self.axis_data:
             self.axis_data = {}
 
@@ -38,18 +40,43 @@ class PS4Controller(object):
                     self.button_data[event.button] = False
                 elif event.type == pygame.JOYHATMOTION:
                     self.hat_data[event.hat] = event.value
-
-            #    print(self.button_data)
-             #   print(self.axis_data)
-              #  print(self.hat_data)
+                
+                #print(self.button_data)
+                #print(self.axis_data)
+                #print(self.hat_data)
             if len(self.axis_data) == 4:
-                self.controller_angle()
+                #left joystick
+                if self.distance(0,1) > 0.95 and self.distance(0,1) < 1.05:
+                    left_angle = self.left_controller_angle()
+                else :
+                    left_angle = -1
 
-    def controller_angle(self):
-        print(self.axis_data[0])
-        #x_rad = math.acos(self.axis_data[0])
-        #y_rad = math.asin(self.axis_data[1])
+                #right joystick 
+                if self.distance(3,4) > 0.95 and self.distance(3,4) < 1.05:
+                    right_angle = self.right_controller_angle()
+                else:
+                    right_angle = -1
+                print("left:",left_angle,"right:",right_angle)
 
+    def left_controller_angle(self):
+        x_deg = math.degrees(math.acos(self.axis_data[0]))
+        y_deg = math.degrees(math.asin(self.axis_data[1]))
+        if y_deg < 0:
+            return x_deg
+        else:
+            return 360 - x_deg
+
+    def right_controller_angle(self):
+        x_deg = math.degrees(math.acos(self.axis_data[3]))
+        y_deg = math.degrees(math.asin(self.axis_data[4]))
+        if y_deg < 0:
+            return x_deg
+        else:
+            return 360 - x_deg
+        
+    
+    def distance(self,x,y):
+        return math.sqrt(pow(0-self.axis_data[x],2)+pow(0-self.axis_data[y],2))
 
 
 if __name__ == "__main__":
