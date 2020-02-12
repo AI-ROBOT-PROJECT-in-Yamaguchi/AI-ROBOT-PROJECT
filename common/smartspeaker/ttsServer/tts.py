@@ -33,7 +33,7 @@ class TTSEngine:
         return self.engine.getProperty(key)
 
 def serverRun(server_class=HTTPServer,handler_class=BaseHTTPRequestHandler):
-    server_address = ('',80)
+    server_address = ('',int(os.environ.get('PORT',5000)))
     httpd = server_class(server_address,handler_class)
     httpd.serve_forever()
 

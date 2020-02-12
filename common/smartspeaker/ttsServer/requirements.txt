@@ -1,0 +1,5 @@
+pyttsx3==2.81
+httplib2==0.15.0
+urllib3==1.25.8
+gTTS==2.1.1
+gTTS-token==1.1.3
