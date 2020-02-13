@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #input id 
 #
 #button_data   (push = true release = false)
@@ -32,6 +33,12 @@ import pygame
 import math
 import RPi.GPIO as GPIO
 import numpy as np
+import time
+
+import traceback
+import sys
+import signal
+import subprocess
 
 class PS4Controller(object):
     controller = None
@@ -41,11 +48,12 @@ class PS4Controller(object):
     right_angle = -1.0
     left_angle = -1.0
 
-    def __init__(self):
+    def __init__(self, servo):
         pygame.init()
         pygame.joystick.init()
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
+        self.servo = servo
 
     def listen(self):
         if not self.axis_data:
@@ -61,7 +69,11 @@ class PS4Controller(object):
             for i in range(self.controller.get_numhats()):
                 self.hat_data[i] = (0, 0)
 
+        i = 0
+        flag = False
+
         while True:
+            time.sleep(0.05)
             for event in pygame.event.get():
                 if event.type == pygame.JOYAXISMOTION:
                     self.axis_data[event.axis] = round(event.value,2)
@@ -71,11 +83,22 @@ class PS4Controller(object):
                     self.button_data[event.button] = False
                 elif event.type == pygame.JOYHATMOTION:
                     self.hat_data[event.hat] = event.value
+                #print(self.button_data[1])
                 
                 #print(self.button_data)
                 #print(self.axis_data)
                 #print(self.hat_data)
+            '''
+            if self.button_data[1] and flag != self.button_data[1]:
+               self.servo.start(0)
+               self.servo_angle(-50)
+               time.sleep(0.6)
+               self.servo_angle(60)
+               time.sleep(0.1)
+               self.servo.ChangeDutyCycle(0)
 
+            flag = self.button_data[1]
+            '''
             if len(self.axis_data) >= 4:
                 #left joystick
                 if self.distance(0,1) > 0.75 and self.distance(0,1) < 1.25:
@@ -94,6 +117,10 @@ class PS4Controller(object):
 
             if not self.right_angle == -1.0:
                 self.send_rightjoy_command(0,1,2,3)
+
+    def servo_angle(self, angle):
+        duty = 2.5 + (12.0-2.5) * (angle+90) / 180
+        self.servo.ChangeDutyCycle(duty)
             
     def left_controller_angle(self):
         x_deg = math.degrees(math.acos(self.axis_data[0]))
@@ -135,27 +162,46 @@ class PS4Controller(object):
             #GPIO.output(m2, speed)
             #GPIO.output(-m3, speed)
             #GPIO.output(m4, speed)
+    '''
     #move
-    """
     def send_rightjoy_command(self,m1,m2,m3,m4):
         rad = math.radians(self.right_angle)
 
-        inv_b = np.array([[-math.cos(rad),-math.sin(rad)],
-                        [ math.cos(rad), math.sin(rad)],
+        inv_b = np.array([[math.sin(rad),math.cos(rad)],
                         [ math.sin(rad),-math.cos(rad)],
-                        [-math.sin(rad), math.cos(rad)]])
-        v = np.array([math.cos(rad)*255,math.sin(rad)*255])
+                        [ math.sin(rad),-math.cos(rad)],
+                        [ math.sin(rad), math.cos(rad)]])
+        v = np.array([abs(math.sin(rad))*255,abs(math.cos(rad))*255])
         
         speed = np.dot(inv_b,v)
-        print("m1",-speed[0])
+        print("m1",speed[0])
         print("m2",speed[1])
         print("m3",speed[2])
-        print("m4",-speed[3])
+        print("m4",speed[3])
         #GPIO.output(m1, speed[0])
-        #GPIO.output(m2, -speed[1]) 
-        #GPIO.output(m3, -speed[2])
+        #GPIO.output(m2, speed[1]) 
+        #GPIO.output(m3, speed[2])
         #GPIO.output(m4, speed[3])
-    """
-if __name__ == "__main__":
-    ps4 = PS4Controller()
+    '''
+def blue():
+    return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
+
+signal.signal(signal.SIGHUP,signal.SIG_IGN)
+print("Invoked.",file=sys.stderr)
+try:
+    print("ps4-controler invoked.",file=sys.stderr)
+    print("Searching bluetooth device...",file=sys.stderr)
+    while not blue():
+        time.sleep(1)
+    print("Bluetooth device found.",file=sys.stderr)
+    pin = 17
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.OUT)
+    print("GPIO setup finished.",file=sys.stderr)
+    servo = GPIO.PWM(pin, 50)
+    servo.start(0)
+    print("Servo starts.",file=sys.stderr)
+    ps4 = PS4Controller(servo)
     ps4.listen()
+except Exception as e:
+    print(traceback.format_exc())
