@@ -47,6 +47,22 @@ class PS4Controller(object):
     hat_data = None
     right_angle = -1.0
     left_angle = -1.0
+    up_l_p = 26
+    up_l_m = 19
+    up_r_p = 13
+    up_r_m = 6
+    low_l_p = 5
+    low_l_m = 11
+    low_r_p = 22
+    low_r_m = 27
+    #ulp = None
+    #ulm = None
+    #urp = None
+    #urm = None
+    #llp = None
+    #llm = None
+    #lrp = None
+    #lrm = None
 
     def __init__(self, servo):
         pygame.init()
@@ -54,6 +70,30 @@ class PS4Controller(object):
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
         self.servo = servo
+        GPIO.setup(self.up_l_p,GPIO.OUT)
+        GPIO.setup(self.up_l_m,GPIO.OUT)
+        GPIO.setup(self.up_r_p,GPIO.OUT)
+        GPIO.setup(self.up_r_m,GPIO.OUT)
+        GPIO.setup(self.low_l_p,GPIO.OUT)
+        GPIO.setup(self.low_l_m,GPIO.OUT)
+        GPIO.setup(self.low_r_p,GPIO.OUT)
+        GPIO.setup(self.low_r_m,GPIO.OUT)
+        #self.ulp = GPIO.PWM(self.up_l_p,50)
+        #self.ulp.start(0)
+        #self.ulm = GPIO.PWM(self.up_l_m,50)
+        #self.ulm.start(0)
+        #self.urp = GPIO.PWM(self.up_r_p,50)
+        #self.urp.start(0)
+        #self.urm = GPIO.PWM(self.up_r_m,50)
+        #self.urm.start(0)
+        #self.llp = GPIO.PWM(self.low_l_p,50)
+        #self.llp.start(0)
+        #self.llm = GPIO.PWM(self.low_l_m,50)
+        #self.llm.start(0)
+        #self.lrp = GPIO.PWM(self.low_r_p,50)
+        #self.lrp.start(0)
+        #self.lrm = GPIO.PWM(self.low_r_m,50)
+        #self.lrm.start(0)
 
     def listen(self):
         if not self.axis_data:
@@ -113,58 +153,89 @@ class PS4Controller(object):
                     self.right_angle = -1.0
             #motor command
             if not self.left_angle == -1.0:
-                self.send_leftjoy_command(0,1,2,3)
+                self.send_leftjoy_command()
+            else:
+                GPIO.output(self.up_l_p,False)
+                GPIO.output(self.up_l_m,False)
+                GPIO.output(self.up_r_p,False)
+                GPIO.output(self.up_r_m,False)
+                GPIO.output(self.low_l_p,False)
+                GPIO.output(self.low_l_m,False)
+                GPIO.output(self.low_r_p,False)
+                GPIO.output(self.low_r_m,False)
 
             if not self.right_angle == -1.0:
-                self.send_rightjoy_command(0,1,2,3)
+                self.send_rightjoy_command()
+            else:
+                GPIO.output(self.up_l_p,False)
+                GPIO.output(self.up_l_m,False)
+                GPIO.output(self.up_r_p,False)
+                GPIO.output(self.up_r_m,False)
+                GPIO.output(self.low_l_p,False)
+                GPIO.output(self.low_l_m,False)
+                GPIO.output(self.low_r_p,False)
+                GPIO.output(self.low_r_m,False)
 
     def servo_angle(self, angle):
         duty = 2.5 + (12.0-2.5) * (angle+90) / 180
         self.servo.ChangeDutyCycle(duty)
             
     def left_controller_angle(self):
-        x_deg = math.degrees(math.acos(self.axis_data[0]))
         y_deg = math.degrees(math.asin(self.axis_data[1]))
-        if y_deg < 0:
-            return x_deg
+        if self.axis_data[0] >= 0:
+            if self.axis_data[1] < 0:
+                return -y_deg
+            else:
+                return 360.0 - y_deg
         else:
-            return 360.0 - x_deg
-
+            return 180 + y_deg
+        
     def right_controller_angle(self):
-        x_deg = math.degrees(math.acos(self.axis_data[3]))
         y_deg = math.degrees(math.asin(self.axis_data[4]))
-        if y_deg < 0:
-            return x_deg
+        
+        if self.axis_data[3] >= 0:
+            if self.axis_data[4] < 0:
+                return -y_deg
+            else:
+                return 360.0 - y_deg
         else:
-            return 360.0 - x_deg
-         
+            return 180 + y_deg
+
     def distance(self,x,y):
         return math.sqrt(pow(0-self.axis_data[x],2)+pow(0-self.axis_data[y],2))
         
     #rotate
-    def send_leftjoy_command(self,m1,m2,m3,m4):
+    def send_leftjoy_command(self):
         #right side
         rad = math.radians(self.left_angle)
         if math.cos(rad) >= math.sqrt(3)/2:
             rate = 7.1*math.cos(rad)-6.1  # 0 ~ 1 speed rate near 0
             speed = rate * 255
             print("right_rotate:",speed)
-            #GPIO.output(m1, speed)
-            #GPIO.output(-m2, speed)
-            #GPIO.output(m3, speed)
-            #GPIO.output(-m4, speed)
+            GPIO.output(self.up_l_p,True)
+            GPIO.output(self.up_l_m,False)
+            GPIO.output(self.up_r_p,False)
+            GPIO.output(self.up_r_m,True)
+            GPIO.output(self.low_l_p,True)
+            GPIO.output(self.low_l_m,False)
+            GPIO.output(self.low_r_p,False)
+            GPIO.output(self.low_r_m,True)
         #left side
         elif math.cos(rad) <= -math.sqrt(3)/2:
             rate = 7.1*-math.cos(rad)-6.1  # 0 ~ 1 speed rate near 180
             speed = rate * 255
             print("left_rotate:",speed)
-            #GPIO.output(-m1, speed)
-            #GPIO.output(m2, speed)
-            #GPIO.output(-m3, speed)
-            #GPIO.output(m4, speed)
-    '''
+    
+            GPIO.output(self.up_l_p,False)
+            GPIO.output(self.up_l_m,True)
+            GPIO.output(self.up_r_p,True)
+            GPIO.output(self.up_r_m,False)
+            GPIO.output(self.low_l_p,False)
+            GPIO.output(self.low_l_m,True)
+            GPIO.output(self.low_r_p,True)
+            GPIO.output(self.low_r_m,False)
     #move
-    def send_rightjoy_command(self,m1,m2,m3,m4):
+    def send_rightjoy_command(self):
         rad = math.radians(self.right_angle)
 
         inv_b = np.array([[math.sin(rad),math.cos(rad)],
@@ -174,15 +245,31 @@ class PS4Controller(object):
         v = np.array([abs(math.sin(rad))*255,abs(math.cos(rad))*255])
         
         speed = np.dot(inv_b,v)
-        print("m1",speed[0])
-        print("m2",speed[1])
-        print("m3",speed[2])
-        print("m4",speed[3])
-        #GPIO.output(m1, speed[0])
-        #GPIO.output(m2, speed[1]) 
-        #GPIO.output(m3, speed[2])
-        #GPIO.output(m4, speed[3])
-    '''
+        print("m1:",speed[0],"m2:",speed[1],"m3:",speed[2],"m4:",speed[3])
+        
+        sp = []
+        sm = []
+        for s in speed:
+            if s == 255:
+                sp.append(True)
+                sm.append(False)
+            elif s == -255:
+                sp.append(False)
+                sm.append(True)
+            else:
+                sp.append(False)
+                sm.append(False)
+
+        GPIO.output(self.up_l_p,sp[0])
+        GPIO.output(self.up_l_m,sm[0])
+
+        GPIO.output(self.up_r_p,sp[1])
+        GPIO.output(self.up_r_m,sm[1])
+        GPIO.output(self.low_l_p,sp[2])
+        GPIO.output(self.low_l_m,sm[2])
+        GPIO.output(self.low_r_p,sp[3])
+        GPIO.output(self.low_r_m,sm[3])
+
 def blue():
     return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
 
