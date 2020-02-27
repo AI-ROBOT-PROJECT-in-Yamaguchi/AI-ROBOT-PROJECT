@@ -55,6 +55,10 @@ class PS4Controller(object):
     low_l_m = 11
     low_r_p = 22
     low_r_m = 27
+    pin_moter = [26,19,13,6,5,11,22,27]
+    status = [True,True,True,True,True,True,True,True]
+    move = False
+    count = 0
     #ulp = None
     #ulm = None
     #urp = None
@@ -70,30 +74,24 @@ class PS4Controller(object):
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
         self.servo = servo
-        GPIO.setup(self.up_l_p,GPIO.OUT)
-        GPIO.setup(self.up_l_m,GPIO.OUT)
-        GPIO.setup(self.up_r_p,GPIO.OUT)
-        GPIO.setup(self.up_r_m,GPIO.OUT)
-        GPIO.setup(self.low_l_p,GPIO.OUT)
-        GPIO.setup(self.low_l_m,GPIO.OUT)
-        GPIO.setup(self.low_r_p,GPIO.OUT)
-        GPIO.setup(self.low_r_m,GPIO.OUT)
+        for pin in self.pin_moter:
+            GPIO.setup(pin,GPIO.OUT)
         #self.ulp = GPIO.PWM(self.up_l_p,50)
-        #self.ulp.start(0)
+        #self.ulp.start(10)
         #self.ulm = GPIO.PWM(self.up_l_m,50)
-        #self.ulm.start(0)
+        #self.ulm.start(10)
         #self.urp = GPIO.PWM(self.up_r_p,50)
-        #self.urp.start(0)
+        #self.urp.start(10)
         #self.urm = GPIO.PWM(self.up_r_m,50)
-        #self.urm.start(0)
+        #self.urm.start(10)
         #self.llp = GPIO.PWM(self.low_l_p,50)
-        #self.llp.start(0)
+        #self.llp.start(10)
         #self.llm = GPIO.PWM(self.low_l_m,50)
-        #self.llm.start(0)
+        #self.llm.start(10)
         #self.lrp = GPIO.PWM(self.low_r_p,50)
-        #self.lrp.start(0)
+        #self.lrp.start(10)
         #self.lrm = GPIO.PWM(self.low_r_m,50)
-        #self.lrm.start(0)
+        #self.lrm.start(10)
 
     def listen(self):
         if not self.axis_data:
@@ -128,7 +126,7 @@ class PS4Controller(object):
                 #print(self.button_data)
                 #print(self.axis_data)
                 #print(self.hat_data)
-            '''
+            
             if self.button_data[1] and flag != self.button_data[1]:
                self.servo.start(0)
                self.servo_angle(-50)
@@ -138,48 +136,71 @@ class PS4Controller(object):
                self.servo.ChangeDutyCycle(0)
 
             flag = self.button_data[1]
-            '''
+            
             if len(self.axis_data) >= 4:
                 #left joystick
                 if self.distance(0,1) > 0.75 and self.distance(0,1) < 1.25:
                     self.left_angle = self.left_controller_angle()
                 else :
                     self.left_angle = -1.0
-
+            '''
                 #right joystick 
                 if self.distance(3,4) > 0.75 and self.distance(3,4) < 1.25:
                     self.right_angle = self.right_controller_angle()
                 else:
                     self.right_angle = -1.0
-            #motor command
-            if not self.left_angle == -1.0:
+            '''
+            if self.left_angle != -1.0:         #round
                 self.send_leftjoy_command()
+                self.move = True
+                self.count = 0
+            elif self.hat_data[0][0] == -1.0:     #left
+                print('push left')
+                self.status = [False,True,True,False,True,False,False,True]
+                self.move = True
+                self.count = 0
+            elif self.hat_data[0][0] == 1.0:      #right
+                print('push right')
+                self.status = [True,False,False,True,False,True,True,False]
+                self.move = True
+                self.count = 0
+            elif self.hat_data[0][1] == 1.0:      #up
+                print('push up')
+                self.status = [True,False,True,False,True,False,True,False]
+                self.move = True
+                self.count = 0
+            elif self.hat_data[0][1] == -1.0:     #down
+                print('push down')
+                self.status = [False,True,False,True,False,True,False,True]
+                self.move = True
+                self.count = 0
             else:
-                GPIO.output(self.up_l_p,False)
-                GPIO.output(self.up_l_m,False)
-                GPIO.output(self.up_r_p,False)
-                GPIO.output(self.up_r_m,False)
-                GPIO.output(self.low_l_p,False)
-                GPIO.output(self.low_l_m,False)
-                GPIO.output(self.low_r_p,False)
-                GPIO.output(self.low_r_m,False)
-
-            if not self.right_angle == -1.0:
-                self.send_rightjoy_command()
+                print('stop')
+                #self.status = [True,True,True,True,True,True,True,True]
+                self.move = False
+            
+            #Status Verrification
+            for pin,state in zip(self.pin_moter,self.status):
+                print('{p}:{s} '.format(p=pin,s=state),end='')
+            print()
+            
+            #output
+            if self.move:
+                for pin,state in zip(self.pin_moter,self.status):
+                    GPIO.output(pin,state)
             else:
-                GPIO.output(self.up_l_p,False)
-                GPIO.output(self.up_l_m,False)
-                GPIO.output(self.up_r_p,False)
-                GPIO.output(self.up_r_m,False)
-                GPIO.output(self.low_l_p,False)
-                GPIO.output(self.low_l_m,False)
-                GPIO.output(self.low_r_p,False)
-                GPIO.output(self.low_r_m,False)
-
+                for pin,state in zip(self.pin_moter,self.status):
+                    state = not state
+                    GPIO.output(pin,state)
+                self.count += 1
+                if self.count >= 3:
+                    self.status = [False,False,False,False,False,False,False,False]
+                    self.count = 0
+    
     def servo_angle(self, angle):
         duty = 2.5 + (12.0-2.5) * (angle+90) / 180
         self.servo.ChangeDutyCycle(duty)
-            
+    
     def left_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[1]))
         if self.axis_data[0] >= 0:
@@ -189,7 +210,7 @@ class PS4Controller(object):
                 return 360.0 - y_deg
         else:
             return 180 + y_deg
-        
+    '''    
     def right_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[4]))
         
@@ -200,44 +221,30 @@ class PS4Controller(object):
                 return 360.0 - y_deg
         else:
             return 180 + y_deg
-
+    '''
     def distance(self,x,y):
         return math.sqrt(pow(0-self.axis_data[x],2)+pow(0-self.axis_data[y],2))
         
     #rotate
     def send_leftjoy_command(self):
-        #right side
         rad = math.radians(self.left_angle)
+        #right side
         if math.cos(rad) >= math.sqrt(3)/2:
             rate = 7.1*math.cos(rad)-6.1  # 0 ~ 1 speed rate near 0
             speed = rate * 255
             print("right_rotate:",speed)
-            GPIO.output(self.up_l_p,True)
-            GPIO.output(self.up_l_m,False)
-            GPIO.output(self.up_r_p,False)
-            GPIO.output(self.up_r_m,True)
-            GPIO.output(self.low_l_p,True)
-            GPIO.output(self.low_l_m,False)
-            GPIO.output(self.low_r_p,False)
-            GPIO.output(self.low_r_m,True)
+            self.status = [True,False,False,True,True,False,False,True]
         #left side
         elif math.cos(rad) <= -math.sqrt(3)/2:
             rate = 7.1*-math.cos(rad)-6.1  # 0 ~ 1 speed rate near 180
             speed = rate * 255
             print("left_rotate:",speed)
-    
-            GPIO.output(self.up_l_p,False)
-            GPIO.output(self.up_l_m,True)
-            GPIO.output(self.up_r_p,True)
-            GPIO.output(self.up_r_m,False)
-            GPIO.output(self.low_l_p,False)
-            GPIO.output(self.low_l_m,True)
-            GPIO.output(self.low_r_p,True)
-            GPIO.output(self.low_r_m,False)
+            self.status = [False,True,True,False,False,True,True,False]
+    '''
     #move
     def send_rightjoy_command(self):
         rad = math.radians(self.right_angle)
-
+        
         inv_b = np.array([[math.sin(rad),math.cos(rad)],
                         [ math.sin(rad),-math.cos(rad)],
                         [ math.sin(rad),-math.cos(rad)],
@@ -245,7 +252,7 @@ class PS4Controller(object):
         v = np.array([abs(math.sin(rad))*255,abs(math.cos(rad))*255])
         
         speed = np.dot(inv_b,v)
-        print("m1:",speed[0],"m2:",speed[1],"m3:",speed[2],"m4:",speed[3])
+        #print("m1:",speed[0],"m2:",speed[1],"m3:",speed[2],"m4:",speed[3])
         
         sp = []
         sm = []
@@ -257,19 +264,18 @@ class PS4Controller(object):
                 sp.append(False)
                 sm.append(True)
             else:
-                sp.append(False)
-                sm.append(False)
-
+                sp.append(True)
+                sm.append(True)
+        print('motor1:',sp[0],',',sm[0],',motor2',sp[1],',',sm[1],'motor3',sp[2],',',sm[2],'motor4',sp[3],',',sm[3])
         GPIO.output(self.up_l_p,sp[0])
         GPIO.output(self.up_l_m,sm[0])
-
         GPIO.output(self.up_r_p,sp[1])
         GPIO.output(self.up_r_m,sm[1])
         GPIO.output(self.low_l_p,sp[2])
         GPIO.output(self.low_l_m,sm[2])
         GPIO.output(self.low_r_p,sp[3])
         GPIO.output(self.low_r_m,sm[3])
-
+            ''' 
 def blue():
     return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
 
