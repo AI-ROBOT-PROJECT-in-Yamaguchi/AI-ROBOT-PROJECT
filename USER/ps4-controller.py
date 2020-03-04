@@ -47,45 +47,48 @@ class PS4Controller(object):
     hat_data = None
     right_angle = -1.0
     left_angle = -1.0
-    up_l_p = 26
-    up_l_m = 19
-    up_r_p = 13
-    up_r_m = 6
-    low_l_p = 5
-    low_l_m = 11
-    low_r_p = 22
-    low_r_m = 27
+    pin_servo = 17
+    pwm_servo = None
     pin_motor = [26,19,13,6,5,11,22,27]
     status = [True,True,True,True,True,True,True,True]
     pwm_motor = []
-    #         up_l  up_r  do_l  do_r
+    #         up_l      up_r      do_l      do_r
     speed = [[1500,1500,1500,1500,1300,1300,1200,1200],     #fast
             [ 3500,3500,3500,3500,3300,3300,2500,2500],
             [ 5500,5500,6300,6300,5000,5000,2900,2900]      #slow
             ]
-    '''
-    relation sleep and speed
-    sleep:0.001  -> speed:500 900 1300 1700 2100 more slow 
-    sleep:0.0001 -> speed:1500 2000 2500 3000 3500
-    sleep:0.0001 -> speed:1500 3500 5500
-    '''
+    speed_rate = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
     move = False
     count = 0
-    check_speed = 1
-    def __init__(self, servo):
-        pygame.init()
-        pygame.joystick.init()
-        self.controller = pygame.joystick.Joystick(0)
-        self.controller.init()
-        self.servo = servo
+    now_speed = 1
+    flag1 = False
+    flag6 = False
+    flag7 = False
+    def __init__(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin_servo, GPIO.OUT)
+        self.pwm_servo = GPIO.PWM(self.pin_servo, 50)
+        self.pwm_servo.start(0)
         for pin in self.pin_motor:
             GPIO.setup(pin,GPIO.OUT)
-        
-        for pin,speed in zip(self.pin_motor,self.speed[self.check_speed]):
+            GPIO.output(pin,False)
+        for pin,speed in zip(self.pin_motor,self.speed[self.now_speed]):
             pwm = GPIO.PWM(pin,speed)
             pwm.start(100)
             self.pwm_motor.append(pwm)
-        
+
+        print("Searching bluetooth device...",file=sys.stderr)
+        while not self.blue():
+            time.sleep(1)
+        print("Bluetooth device found.",file=sys.stderr)
+        pygame.init()
+        pygame.joystick.init()
+        while pygame.joystick.get_count() == 0:
+            time.sleep(0.5)
+        print("joystick device get")
+        self.controller = pygame.joystick.Joystick(0)
+        self.controller.init()
+    
     def listen(self):
         if not self.axis_data:
             self.axis_data = {}
@@ -99,14 +102,10 @@ class PS4Controller(object):
             self.hat_data = {}
             for i in range(self.controller.get_numhats()):
                 self.hat_data[i] = (0, 0)
-        
-        i = 0
-        flag1 = False
-        flag6 = False
-        flag7 = False
 
         while True:
             time.sleep(0.0001)
+            self.speed_rate = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
             for event in pygame.event.get():
                 if event.type == pygame.JOYAXISMOTION:
                     self.axis_data[event.axis] = round(event.value,2)
@@ -122,102 +121,42 @@ class PS4Controller(object):
                 #print(self.axis_data)
                 #print(self.hat_data)
             
-            #get O button and attack motor
-            if self.button_data[1] and flag1 != self.button_data[1]:
-               self.servo.start(0)
-               self.servo_angle(-50)
-               time.sleep(0.6)
-               self.servo_angle(60)
-               time.sleep(0.1)
-               self.servo.ChangeDutyCycle(0)
-            flag1 = self.button_data[1]
+            #get O button and move motor
+            self.move_servo()
             
-            #get joystick
-            '''
-            #left joystick
-            if self.distance(0,1) > 0.75 and self.distance(0,1) < 1.25:
-                self.left_angle = self.left_controller_angle()
-            else :
-                self.left_angle = -1.0
-            '''
-            #right joystick 
-            if self.distance(3,4) > 0.75 and self.distance(3,4) < 1.25:
-                self.right_angle = self.right_controller_angle()
-            else:
-                self.right_angle = -1.0
-    
-            #get L2 button and speed down
-            if self.button_data[6] and flag6 != self.button_data[6]: #more slow
-                if self.check_speed != 2:
-                    self.check_speed += 1
-                    for pwm,speed in zip(self.pwm_motor,self.speed[self.check_speed]):
-                        pwm.ChangeFrequency(speed)
-                        #pwm.ChangeDutyCycle()
-            flag6 = self.button_data[6]
-
-            #get R2 button and speed up
-            if self.button_data[7] and flag7 != self.button_data[7]: #more fast
-                if self.check_speed != 0:
-                    self.check_speed -= 1
-                    for pwm,speed in zip(self.pwm_motor,self.speed[self.check_speed]):
-                        pwm.ChangeFrequency(speed)
-                        #pwm.ChangeDutyCycle()
-            flag7 = self.button_data[7]
-            print('speed',self.check_speed)
-
-            #get closs key and move 
-            if self.right_angle != -1.0:         #round
-                self.send_rightjoy_command()
-                self.move = True
-                self.count = 0
-            elif self.hat_data[0][0] == -1.0:     #left
-                print('push left')
-                self.status = [False,True,True,False,True,False,False,True]
-                self.move = True
-                self.count = 0
-            elif self.hat_data[0][0] == 1.0:      #right
-                print('push right')
-                self.status = [True,False,False,True,False,True,True,False]
-                self.move = True
-                self.count = 0
-            elif self.hat_data[0][1] == 1.0:      #up
-                print('push up')
-                self.status = [True,False,True,False,True,False,True,False]
-                self.move = True
-                self.count = 0
-            elif self.hat_data[0][1] == -1.0:     #down
-                print('push down')
-                self.status = [False,True,False,True,False,True,False,True]
-                self.move = True
-                self.count = 0
-            else:
-                print('stop')
-                self.status = [False,False,False,False,False,False,False,False]
-                self.move = False
+            #get speed status
+            self.get_speed_status()
+            #print('speed',self.now_speed)
+            
+            #get motor status
+            self.get_motor_status()
             
             #Status Verrification
-            for pin,state in zip(self.pin_motor,self.status):
-                print('{p}:{s} '.format(p=pin,s=state),end='')
-            print()
+            #for pin,state in zip(self.pin_motor,self.status):
+            #    print('{p}:{s} '.format(p=pin,s=state),end='')
+            #print()
             
             #output
-            if self.move:
-                for pin,state in zip(self.pin_motor,self.status):
-                    GPIO.output(pin,state)
-            else:
-                for pin,state in zip(self.pin_motor,self.status):
-                    state = not state
-                    GPIO.output(pin,state)
-                #    self.count += 1
-                #if count >= 3:  #and if stop status -> comment  
-                #    self.status = [False,False,False,False,False,False,False,False]
-                #    self.count = 0
-
+            self.send_command()
+   
+    def blue(self):
+        return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
     
     def servo_angle(self, angle):
         duty = 2.5 + (12.0-2.5) * (angle+90) / 180
-        self.servo.ChangeDutyCycle(duty)
-    '''
+        self.pwm_servo.ChangeDutyCycle(duty)
+
+    def move_servo(self):
+        #get O button and attack motor
+        if self.button_data[1] and self.flag1 != self.button_data[1]:
+            self.pwm_servo.start(0)
+            self.servo_angle(-50)
+            time.sleep(0.6)
+            self.servo_angle(60)
+            time.sleep(0.1)
+            self.pwm_servo.ChangeDutyCycle(0)
+        self.flag1 = self.button_data[1]
+    
     def left_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[1]))
         if self.axis_data[0] >= 0:
@@ -227,7 +166,7 @@ class PS4Controller(object):
                 return 360.0 - y_deg
         else:
             return 180 + y_deg
-    '''
+
     def right_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[4]))
         
@@ -241,77 +180,139 @@ class PS4Controller(object):
 
     def distance(self,x,y):
         return math.sqrt(pow(0-self.axis_data[x],2)+pow(0-self.axis_data[y],2))
+    
+    def get_speed_status(self):
+        #L2 button -> slow
+        if self.button_data[6] and self.flag6 != self.button_data[6]:
+            if self.now_speed != 2:
+                self.now_speed += 1
+        self.flag6 = self.button_data[6]
+        
+        #R2 button -> fast
+        if self.button_data[7] and self.flag7 != self.button_data[7]:
+            if self.now_speed != 0:
+                self.now_speed -= 1
+        self.flag7 = self.button_data[7]
+
+    #get status
+    def get_motor_status(self):
+        #left joystick
+        if self.distance(0,1) > 0.95:
+            self.left_angle = self.left_controller_angle()
+        else :
+            self.left_angle = -1.0
+
+        #right joystick 
+        if self.distance(3,4) > 0.95:
+            self.right_angle = self.right_controller_angle()
+        else:
+            self.right_angle = -1.0
+
+        if self.right_angle != -1.0:         #rotate
+            self.set_rightjoy_command()
+            self.move = True
+            #self.count = 0
+        elif self.left_angle != -1.0:        #move
+            self.set_leftjoy_command()
+            self.move = True
+            #self.count = 0
+        elif self.hat_data[0][0] == -1.0:     #left
+            #print('push left')
+            self.status = [False,True,True,False,True,False,False,True]
+            self.move = True
+            #self.count = 0
+        elif self.hat_data[0][0] == 1.0:      #right
+            #print('push right')
+            self.status = [True,False,False,True,False,True,True,False]
+            self.move = True
+            #self.count = 0
+        elif self.hat_data[0][1] == 1.0:      #up
+            #print('push up')
+            self.status = [True,False,True,False,True,False,True,False]
+            self.move = True
+            #self.count = 0
+        elif self.hat_data[0][1] == -1.0:     #down
+            #print('push down')
+            self.status = [False,True,False,True,False,True,False,True]
+            self.move = True
+            #self.count = 0
+        else:
+            #print('stop')
+            self.status = [False,False,False,False,False,False,False,False]
+            self.move = False
         
     #rotate
-    def send_rightjoy_command(self):
+    def set_rightjoy_command(self):
         rad = math.radians(self.right_angle)
         #right side
         if math.cos(rad) >= math.sqrt(3)/2:
             rate = 7.1*math.cos(rad)-6.1  # 0 ~ 1 speed rate near 0
-            speed = rate * 255
-            print("right_rotate:",speed)
+            #speed = rate * 255
+            #print("joy right rotate")
             self.status = [True,False,False,True,True,False,False,True]
         #left side
         elif math.cos(rad) <= -math.sqrt(3)/2:
             rate = 7.1*-math.cos(rad)-6.1  # 0 ~ 1 speed rate near 180
-            speed = rate * 255
-            print("left_rotate:",speed)
+            #speed = rate * 255
+            #print("joy left rotate")
             self.status = [False,True,True,False,False,True,True,False]
-    '''
+
     #move
-    def send_leftjoy_command(self):
+    def set_leftjoy_command(self):
         rad = math.radians(self.left_angle)
         
         inv_b = np.array([[math.sin(rad),math.cos(rad)],
+                        [ math.sin(rad), math.cos(rad)],
                         [ math.sin(rad),-math.cos(rad)],
                         [ math.sin(rad),-math.cos(rad)],
+                        [ math.sin(rad),-math.cos(rad)],
+                        [ math.sin(rad),-math.cos(rad)],
+                        [ math.sin(rad), math.cos(rad)],
                         [ math.sin(rad), math.cos(rad)]])
-        v = np.array([abs(math.sin(rad))*255,abs(math.cos(rad))*255])
+        v = np.array([abs(math.sin(rad)),abs(math.cos(rad))])   #-1 ~ 1
         
         speed = np.dot(inv_b,v)
+        speed = 1.5 - abs(speed)
+        self.speed_rate = speed
         #print("m1:",speed[0],"m2:",speed[1],"m3:",speed[2],"m4:",speed[3])
-        
-        sp = []
-        sm = []
-        for s in speed:
-            if s == 255:
-                sp.append(True)
-                sm.append(False)
-            elif s == -255:
-                sp.append(False)
-                sm.append(True)
-            else:
-                sp.append(True)
-                sm.append(True)
-        print('motor1:',sp[0],',',sm[0],',motor2',sp[1],',',sm[1],'motor3',sp[2],',',sm[2],'motor4',sp[3],',',sm[3])
-        GPIO.output(self.up_l_p,sp[0])
-        GPIO.output(self.up_l_m,sm[0])
-        GPIO.output(self.up_r_p,sp[1])
-        GPIO.output(self.up_r_m,sm[1])
-        GPIO.output(self.low_l_p,sp[2])
-        GPIO.output(self.low_l_m,sm[2])
-        GPIO.output(self.low_r_p,sp[3])
-        GPIO.output(self.low_r_m,sm[3])
-            ''' 
-def blue():
-    return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
+        if rad < math.pi/4 or rad >= 7*math.pi/4:
+            #print('joy move right')
+            self.status = [True,False,False,True,False,True,True,False]
+        elif math.pi/4 <= rad and rad < 3*math.pi/4:
+            #print('joy move up')
+            self.status = [True,False,True,False,True,False,True,False]
+        elif 3*math.pi/4 <= rad and rad < 5*math.pi/4:
+            #print('joy move left')
+            self.status = [False,True,True,False,True,False,False,True]
+        elif 5*math.pi/4 <= rad and rad < 7*math.pi/4:
+            #print('joy move down')
+            self.status = [False,True,False,True,False,True,False,True]
+
+    def send_command(self):
+        #pwm
+        for pwm,speed,rate in zip(self.pwm_motor,self.speed[self.now_speed],self.speed_rate):
+            #print(speed*rate,end=' ')
+            pwm.ChangeFrequency(speed*rate)
+        #print()
+        #omni
+        if self.move:
+            for pin,state in zip(self.pin_motor,self.status):
+                GPIO.output(pin,state)
+        else:
+            for pin,state in zip(self.pin_motor,self.status):
+                state = not state
+                GPIO.output(pin,state)
+            #    self.count += 1
+            #if count >= 3:  #and if stop status -> comment  
+            #    self.status = [False,False,False,False,False,False,False,False]
+            #    self.count = 0
+
 
 signal.signal(signal.SIGHUP,signal.SIG_IGN)
 print("Invoked.",file=sys.stderr)
 try:
-    print("ps4-controler invoked.",file=sys.stderr)
-    print("Searching bluetooth device...",file=sys.stderr)
-    while not blue():
-        time.sleep(1)
-    print("Bluetooth device found.",file=sys.stderr)
-    spin = 17
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(spin, GPIO.OUT)
-    print("GPIO setup finished.",file=sys.stderr)
-    servo = GPIO.PWM(spin, 50)
-    servo.start(0)
-    print("Servo starts.",file=sys.stderr)
-    ps4 = PS4Controller(servo)
+    ps4 = PS4Controller()
+    #print("ps4-controler invoked.",file=sys.stderr)
     ps4.listen()
 except Exception as e:
     print(traceback.format_exc())
