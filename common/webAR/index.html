@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+	<script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.5.0/aframe/build/aframe-ar.js"></script>
+	<script src="https://docs.opencv.org/4.1.0/opencv.js"></script>
+    <title>A-FRAME</title>
+  </head>
+  <body>
+	<!--<a-scene vr-mode-ui="enabled: false" inspector="url: https://aframe.io/releases/0.3.0/aframe-inspector.min.js">-->
+	<a-scene canvas="canvas: #my-canvas" fog stats>
+		<a-assets id="map-container">
+			<canvas id="container" crossorigin="anonymous"></canvas>
+		</a-assets>
+		<!--<canvas class="a-canvas" data-aframe-canvas="true" width="1120" height="840" style="width: 640px; height: 480px;"></canvas>
+		-->
+		<a-camera look-controls-enabled="false" wasd-controls-enabled="false"></a-camera>
+
+		<!--<a-box position="0 0 -3" animation="property: position; to: 5 1.6 -3; dur: 1500; easing: linear; loop: true" rotation="0 0 0" color="#4CC3D9">
+		</a-box>-->
+	</a-scene>
+  </body>
+
+  <script src="index.js"></script>
+</html>
