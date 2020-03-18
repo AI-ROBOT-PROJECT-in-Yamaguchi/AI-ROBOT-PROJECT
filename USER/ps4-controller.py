@@ -138,7 +138,7 @@ class PS4Controller(object):
             self.move_servo()
             
             #get aquare button and vibration
-            self.vibration()
+            #self.vibration()
             
             #get speed status
             self.get_speed_status()
@@ -175,9 +175,10 @@ class PS4Controller(object):
         self.flag1 = self.button_data[1]
 
     def vibration(self):
-        if self.button_data[3] and self.flag3 != self.button_data[3]:
-            self.fftest.move(1)
-        self.flag3 = self.button_data[3]
+        #if self.button_data[3] and self.flag3 != self.button_data[3]:
+        #    self.fftest.move(1)
+        #self.flag3 = self.button_data[3]
+        self.fftest.move(1)
 
     def left_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[1]))
@@ -207,12 +208,14 @@ class PS4Controller(object):
         #L2 button -> slow
         if self.button_data[6] and self.flag6 != self.button_data[6]:
             if self.now_speed != 2:
+                self.vibration()
                 self.now_speed += 1
         self.flag6 = self.button_data[6]
         
         #R2 button -> fast
         if self.button_data[7] and self.flag7 != self.button_data[7]:
             if self.now_speed != 0:
+                self.vibration()
                 self.now_speed -= 1
         self.flag7 = self.button_data[7]
 
