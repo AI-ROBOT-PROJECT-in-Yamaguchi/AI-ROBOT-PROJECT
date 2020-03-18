@@ -34,11 +34,11 @@ import math
 import RPi.GPIO as GPIO
 import numpy as np
 import time
-
 import traceback
 import sys
 import signal
 import subprocess
+#from fftest import fftest2
 
 class PS4Controller(object):
     controller = None
@@ -62,8 +62,18 @@ class PS4Controller(object):
     count = 0
     now_speed = 1
     flag1 = False
+    flag3 = False
     flag6 = False
     flag7 = False
+    pid_m = 0
+    pid_m1 = 0
+    pid_e = 0
+    pid_e1 = 0
+    pid_e2 = 0
+    pid_kp = 0.003
+    pid_ki = 0.003
+    pid_kd = 0.003
+    pid_goal = 1
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin_servo, GPIO.OUT)
@@ -123,7 +133,10 @@ class PS4Controller(object):
             
             #get O button and move motor
             self.move_servo()
-            
+            '''
+            #get aquare button and vibration
+            self.vibration()
+            '''
             #get speed status
             self.get_speed_status()
             #print('speed',self.now_speed)
@@ -138,6 +151,7 @@ class PS4Controller(object):
             
             #output
             self.send_command()
+            print(self.pid_m)
    
     def blue(self):
         return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
@@ -156,7 +170,12 @@ class PS4Controller(object):
             time.sleep(0.1)
             self.pwm_servo.ChangeDutyCycle(0)
         self.flag1 = self.button_data[1]
-    
+    '''
+    def vibration(self):
+        if self.button_data[3] and self.flag3 != self.button_data[3]:
+            fftest2.main(2)
+        self.flag3 = self.button_data[3]
+    '''
     def left_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[1]))
         if self.axis_data[0] >= 0:
@@ -287,18 +306,34 @@ class PS4Controller(object):
         elif 5*math.pi/4 <= rad and rad < 7*math.pi/4:
             #print('joy move down')
             self.status = [False,True,False,True,False,True,False,True]
-
+    def set_pid(self):
+        if self.pid_m < 1 and self.now_speed == 0:
+            self.pid_m1 = self.pid_m
+            self.pid_e2 = self.pid_m1
+            self.pid_e1 = self.pid_e
+            self.pid_e = self.pid_goal - self.pid_m
+            self.pid_m = self.pid_m1 + self.pid_kp * (self.pid_e - self.pid_e1) + self.pid_ki * self.pid_e + self.pid_kd * ((self.pid_e - self.pid_e1)-(self.pid_e1 - self.pid_e2))
+        else:
+           self.pid_m = 1.0
+    def reset_pid(self):
+        self.pid_m = 0
+        self.pid_m1 = 0
+        self.pid_e = 0
+        self.pid_e1 = 0
+        self.pid_e2 = 0
+        self.pid_kp = 0.003
+        self.pid_ki = 0.003
+        self.pid_kd = 0.003
+        self.pid_goal = 1
+    
     def send_command(self):
-        #pwm
-        for pwm,speed,rate in zip(self.pwm_motor,self.speed[self.now_speed],self.speed_rate):
-            #print(speed*rate,end=' ')
-            pwm.ChangeFrequency(speed*rate)
-        #print()
         #omni
         if self.move:
+            self.set_pid()
             for pin,state in zip(self.pin_motor,self.status):
                 GPIO.output(pin,state)
         else:
+            self.reset_pid()
             for pin,state in zip(self.pin_motor,self.status):
                 state = not state
                 GPIO.output(pin,state)
@@ -306,6 +341,11 @@ class PS4Controller(object):
             #if count >= 3:  #and if stop status -> comment  
             #    self.status = [False,False,False,False,False,False,False,False]
             #    self.count = 0
+        #pwm
+        for pwm,speed,rate in zip(self.pwm_motor,self.speed[self.now_speed],self.speed_rate):
+        #    print(speed*rate*(6-self.pid_m*5),end=' ')
+            pwm.ChangeFrequency(speed*rate*(3-self.pid_m*2))
+        #print()
 
 
 signal.signal(signal.SIGHUP,signal.SIG_IGN)
