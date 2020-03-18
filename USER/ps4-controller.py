@@ -38,7 +38,7 @@ import traceback
 import sys
 import signal
 import subprocess
-#from fftest import fftest2
+from fftest import fftest3
 
 class PS4Controller(object):
     controller = None
@@ -74,6 +74,8 @@ class PS4Controller(object):
     pid_ki = 0.003
     pid_kd = 0.003
     pid_goal = 1
+    fftest = None
+
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin_servo, GPIO.OUT)
@@ -98,6 +100,7 @@ class PS4Controller(object):
         print("joystick device get")
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
+        self.fftest = fftest3.Vibration()
     
     def listen(self):
         if not self.axis_data:
@@ -133,10 +136,10 @@ class PS4Controller(object):
             
             #get O button and move motor
             self.move_servo()
-            '''
+            
             #get aquare button and vibration
             self.vibration()
-            '''
+            
             #get speed status
             self.get_speed_status()
             #print('speed',self.now_speed)
@@ -151,7 +154,7 @@ class PS4Controller(object):
             
             #output
             self.send_command()
-            print(self.pid_m)
+            #print(self.pid_m)
    
     def blue(self):
         return subprocess.run(["l2ping","90:89:5F:01:71:DE","-c","1"]).returncode == 0
@@ -170,12 +173,12 @@ class PS4Controller(object):
             time.sleep(0.1)
             self.pwm_servo.ChangeDutyCycle(0)
         self.flag1 = self.button_data[1]
-    '''
+
     def vibration(self):
         if self.button_data[3] and self.flag3 != self.button_data[3]:
-            fftest2.main(2)
+            self.fftest.move(1)
         self.flag3 = self.button_data[3]
-    '''
+
     def left_controller_angle(self):
         y_deg = math.degrees(math.asin(self.axis_data[1]))
         if self.axis_data[0] >= 0:
@@ -343,9 +346,9 @@ class PS4Controller(object):
             #    self.count = 0
         #pwm
         for pwm,speed,rate in zip(self.pwm_motor,self.speed[self.now_speed],self.speed_rate):
-        #    print(speed*rate*(6-self.pid_m*5),end=' ')
+            print(speed*rate*(6-self.pid_m*5),end=' ')
             pwm.ChangeFrequency(speed*rate*(3-self.pid_m*2))
-        #print()
+        print()
 
 
 signal.signal(signal.SIGHUP,signal.SIG_IGN)
