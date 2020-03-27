@@ -1,9 +1,8 @@
 import pychromecast
 import sys
+from ghconfig import *
 
 mediaUrl = sys.argv[1]
-mediaType = "audio/mp3"
-oogleHomeAddress="192.168.43.167"
 
 googleHome = pychromecast.Chromecast(googleHomeAddress)
 googleHome.wait()
