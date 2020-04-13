@@ -1,0 +1,70 @@
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+		<script>
+			window.addEventListener('load',init);
+
+			function init(){
+
+				const width = 640;
+				const height = 480;
+				const canvas = document.querySelector('#myCanvas');
+				const gl=canvas.getContext('webgl');
+				const renderer=new THREE.WebGLRenderer({
+					canvas: canvas
+				});
+
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(width,height);
+
+				const scene = new THREE.Scene();
+				const camera = new THREE.PerspectiveCamera(45,width/height);
+				scene.add(
+					new THREE.AmbientLight(0xffffff)
+				);
+				texture=new THREE.TextureLoader().load('image.jpg',
+					(tex)=>{
+						const w=5;
+						const h=tex.image.height/(tex.image.width/w);
+						const plane = new THREE.Mesh(
+							new THREE.PlaneGeometry(width,height),
+							new THREE.MeshPhongMaterial({
+								map:texture,
+								depthTest:false
+							})
+						);
+						plane.scale.set(w,h,1);
+						plane.renderOrder=-1;
+						scene.add(plane);
+					}
+				);
+				const box = new THREE.Mesh(
+					new THREE.BoxGeometry(400,400,400),
+					new THREE.MeshNormalMaterial()
+				);
+				scene.add(box);
+				camera.position.set(0,0,+1000);
+
+				t=0;
+				tick();
+				function tick(){
+					box.rotation.y += 0.01;
+					box.rotation.x += 0.02;
+					box.rotation.z += 0.03;
+//					box.position.x=Math.cos(t*Math.PI/100)*500;
+//					box.position.z=Math.sin(t*Math.PI/100)*500;
+//					t+=1;
+				//	renderer.render(back_scene,back_camera);
+					renderer.render(scene,camera);
+					requestAnimationFrame(tick);
+				}
+			}
+
+
+		</script>
+	</head>
+	<body>
+		<canvas id="myCanvas"></canvas>
+	</body>
+</html>
